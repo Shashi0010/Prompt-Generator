@@ -1,8 +1,6 @@
-# 🪄 Prompt Sorcery Studio 🪄
+# 💻 Prompt Sorcery Studio 🎡
 
 ✨ *Your ideas are vague. Our AI makes them Vogue.*
-
-![Banner](https://raw.githubusercontent.com/your-repo-path/your-banner.jpg)
 
 ---
 
