@@ -12,7 +12,7 @@ Whether you’re writing Instagram captions, ad hooks, startup slogans, or philo
 
 ## 🎨 Features
 
-* 🪄 **AI Magic Prompt Generator** using Vaibhav’s prompt formula
+* 🎁 **AI Magic Prompt Generator** using Prompt Sorcerror’s magic prompt formula
 * 🧠 **Context & Objective Reasoning Layer** to guess what you *really meant*
 * 🔥 **Dual AI Model Selection**: OpenAI GPT-3.5, DeepSeek, or Both
 * ✨ **Glass morph UI with modern animations**
