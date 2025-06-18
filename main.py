@@ -1,10 +1,24 @@
+# 📦 🪄 Prompt Sorcery Studio 🪄 — AI Magic Prompt Generator
+# "Your ideas are vague. Our AI makes them Vogue."
+
 import streamlit as st
 import requests
 import os
 import time
+import random
 
 # Set page config
-st.set_page_config(page_title="Prompt Sorcery Studio", page_icon="🎆", layout="centered")
+st.set_page_config(page_title="🪄 Prompt Sorcery Studio 🪄", page_icon="🪄", layout="centered")
+
+# Punchline stack
+punchlines = [
+    "You bring the idea, I’ll craft the prompt. Because I turn good ideas into unforgettable prompts. Dare you to try me. 😏✨",
+    "You bring the idea, I’ll craft the prompt. Good becomes unforgettable. Bet you won’t try it just once. 😎",
+    "I turn good ideas into unforgettable prompts. You game enough to test it? ⚡",
+    "Idea in, magic out. I dare you to see what I can do with yours. 🔥"
+]
+
+random_punchline = random.choice(punchlines)
 
 # Custom CSS for glass morph, banner background, typewriter animation and styling
 st.markdown("""
@@ -73,12 +87,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # App Banner and Heading
-st.markdown("""
+st.markdown(f"""
 <div class='banner'>
   <h1>🪄 Prompt Sorcery Studio 🪄</h1>
   <h4 class='typewriter'>Your ideas are vague. Our AI makes them Vogue.</h4>
+  <h5 style='text-align: center; color: #eee;'>{random_punchline}</h5>
 </div>
 """, unsafe_allow_html=True)
+
+# The rest remains unchanged as your input card, feedback, and coffee button were already correct.
+# Done ✅
 
 # Input Card Container
 with st.container():
