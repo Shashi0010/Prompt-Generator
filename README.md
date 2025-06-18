@@ -85,9 +85,14 @@ DEEPSEEK_KEY = "your-deepseek-key"
 
 ## 💖 Credits & Thanks
 
-* Prompt Formula: *Vaibhav, AI Masterminds Session*
-* Icons: *Emojipedia* 📦
-* Beta Testers: *You, probably soon* 😏
+- App Concept, Engineering, Design, UI Magic, and AI Sorcery: **Shashikanth** 🪄✨
+- Icons: *Emojipedia* 📦
+- Beta Testers: *Soon-to-be you 😏*
+
+---
+
+**First rule of Prompt Sorcery Club: Test both models. Always.** 💥
+
 
 ## 📄 License
 
