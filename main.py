@@ -28,7 +28,7 @@ st.markdown("""
         background-attachment: fixed;
     }
     .banner {
-        background-image: url('https://raw.githubusercontent.com/your-repo-path/your-banner.jpg');
+        background-image: url('https://raw.githubusercontent.com/Shashi0010/Prompt-Generator/main/assets/banner.jpg');
         background-size: cover;
         background-position: center;
         border-radius: 16px;
