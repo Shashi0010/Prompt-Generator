@@ -49,6 +49,10 @@ Keep it precise, engaging, and outcome-focused.
     final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
     return final_output
 
+@app.get("/")
+def read_root():
+    return {"message": "Prompt API is running! 🎉"}
+
 @app.get("/generate")
 def generate_magic_prompt(idea: str = Query(...), model: str = Query(...)):
     openai_api_key = os.getenv("OPENAI_KEY")
