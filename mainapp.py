@@ -19,39 +19,48 @@ class PromptPayload(BaseModel):
     model: str
 
 def send_ai_request(prompt, model_name, api_key, api_url):
-    print(f"Sending AI request to {model_name} with prompt:\n{prompt}\n")
+    print(f"Sending AI request to {api_url} with model {model_name}")
+    print(f"Prompt content: {prompt}")
+
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 500
     }
+
     response = requests.post(api_url, headers=headers, json=payload)
-    print("Raw API Response:", response.status_code, response.text)
+    print(f"API raw response: {response.text}")
+
     result = response.json()
     return result["choices"][0]["message"]["content"]
 
 def process_prompt_flow(idea, api_key, model_name, url):
-    print(f"Processing prompt flow for {model_name}...")
-    context_instruction = f"You are a senior AI prompt engineer. Define a strategic context for: '{idea}'"
-    objective_instruction = f"You are a senior AI strategist. Define an actionable objective for: '{idea}'"
+    print(f"Processing idea: {idea} with {model_name} at {url}")
 
-    context_result = send_ai_request(context_instruction, model_name, api_key, url)
-    print(f"Context result: {context_result}")
+    try:
+        context_instruction = f"You are a senior AI prompt engineer. Define a strategic context for: '{idea}'"
+        context_result = send_ai_request(context_instruction, model_name, api_key, url)
+        print(f"Context result: {context_result}")
 
-    objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
-    print(f"Objective result: {objective_result}")
+        objective_instruction = f"You are a senior AI strategist. Define an actionable objective for: '{idea}'"
+        objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
+        print(f"Objective result: {objective_result}")
 
-    final_magic_prompt = f"""
-You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task:
-{context_result}
-Your task is to {objective_result}
-Ensure content is precise, engaging, outcome-focused, and contextually sound.
-"""
-    final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
-    print(f"Final generated prompt: {final_output}")
-    return final_output
+        final_magic_prompt = f"""
+        You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
+        {context_result}
+        Your task is to {objective_result}
+        Ensure the content is precise, engaging, outcome-focused, and contextually sound.
+        """
+        final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
+        print(f"Final magic prompt result: {final_output}")
 
+        return final_output
+
+    except Exception as e:
+        print(f"Error during prompt processing: {e}")
+        return "Prompt generation failed."
 @app.post("/generate/{slug}")
 async def generate_magic_prompt(slug: str, payload: PromptPayload):
     print(f"Received API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
