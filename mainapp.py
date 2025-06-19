@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -6,6 +6,7 @@ import requests
 
 app = FastAPI()
 
+# CORS config to allow frontend on Netlify
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://magic-prompt-generator.netlify.app"],
@@ -14,13 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Pydantic model for expected POST body
 class PromptPayload(BaseModel):
     idea: str
     model: str
 
+# Helper: Send AI request with debug logs
 def send_ai_request(prompt, model_name, api_key, api_url):
-    print(f"Sending AI request to {api_url} with model {model_name}")
-    print(f"Prompt content: {prompt}")
+    print(f"\nSending AI request to {api_url} with model {model_name}")
+    print(f"Prompt content: {prompt}\n")
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
@@ -30,13 +33,14 @@ def send_ai_request(prompt, model_name, api_key, api_url):
     }
 
     response = requests.post(api_url, headers=headers, json=payload)
-    print(f"API raw response: {response.text}")
+    print(f"API raw response: {response.text}\n")
 
     result = response.json()
     return result["choices"][0]["message"]["content"]
 
+# Helper: Build prompt flow with debug logs
 def process_prompt_flow(idea, api_key, model_name, url):
-    print(f"Processing idea: {idea} with {model_name} at {url}")
+    print(f"\nProcessing idea: {idea} with {model_name} at {url}")
 
     try:
         context_instruction = f"You are a senior AI prompt engineer. Define a strategic context for: '{idea}'"
@@ -54,32 +58,37 @@ def process_prompt_flow(idea, api_key, model_name, url):
         Ensure the content is precise, engaging, outcome-focused, and contextually sound.
         """
         final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
-        print(f"Final magic prompt result: {final_output}")
+        print(f"Final magic prompt result: {final_output}\n")
 
         return final_output
 
     except Exception as e:
         print(f"Error during prompt processing: {e}")
         return "Prompt generation failed."
+
+# POST endpoint with random slug
 @app.post("/generate/{slug}")
 async def generate_magic_prompt(slug: str, payload: PromptPayload):
-    print(f"Received API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
+    print(f"\nReceived API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
+
     openai_api_key = os.getenv("OPENAI_KEY")
     deepseek_api_key = os.getenv("DEEPSEEK_KEY")
 
     results = {}
 
     if payload.model in ["OpenAI GPT-3.5", "Both"]:
-        results["openai"] = process_prompt_flow(
+        openai_output = process_prompt_flow(
             payload.idea, openai_api_key, "gpt-3.5-turbo", "https://api.openai.com/v1/chat/completions"
         )
+        results["openai"] = openai_output
 
     if payload.model in ["DeepSeek", "Both"]:
-        results["deepseek"] = process_prompt_flow(
+        deepseek_output = process_prompt_flow(
             payload.idea, deepseek_api_key, "deepseek-chat", "https://api.deepseek.com/v1/chat/completions"
         )
+        results["deepseek"] = deepseek_output
 
-    print("Returning API response:", results)
+    print(f"Returning API response: {results}\n")
 
     return {
         "slug": slug,
@@ -88,6 +97,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         "magic_prompt": results
     }
 
+# Optional: root path test
 @app.get("/")
 def read_root():
     return {"message": "Prompt API is running! 🎉"}
