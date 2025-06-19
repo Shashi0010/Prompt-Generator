@@ -11,10 +11,11 @@ deepseek_api_key = os.getenv("DEEPSEEK_KEY")
 # CORS for local dev + Netlify frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your Netlify URL when deployed
+    allow_origins=["https://magic-prompt-generator.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
 )
 
 class PromptRequest(BaseModel):
