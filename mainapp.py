@@ -40,16 +40,16 @@ def process_prompt_flow(idea, api_key, model_name, url):
     context_result = send_ai_request(context_instruction, model_name, api_key, url)
     objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
 
-   final_magic_prompt = f"""
-You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
-{context_result}
-Your task is to {objective_result}
-Ensure the content is precise, engaging, outcome-focused, and contextually sound.
-"""
-
+    final_magic_prompt = f"""
+        You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
+        {context_result}
+        Your task is to {objective_result}
+        Ensure the content is precise, engaging, outcome-focused, and contextually sound.
+        """
 
     final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
     return final_output
+
 
 # ✅ POST endpoint with random slug
 @app.post("/generate/{slug}")
