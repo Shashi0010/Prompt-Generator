@@ -5,6 +5,8 @@ import requests
 import os
 
 app = FastAPI()
+openai_api_key = os.getenv("OPENAI_KEY")
+deepseek_api_key = os.getenv("DEEPSEEK_KEY")
 
 # CORS for local dev + Netlify frontend
 app.add_middleware(
