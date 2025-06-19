@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -6,7 +6,7 @@ import requests
 
 app = FastAPI()
 
-# CORS config to allow frontend on Netlify
+# CORS config to allow your Netlify frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://magic-prompt-generator.netlify.app"],
@@ -15,12 +15,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic model for expected POST body
+# Request body schema
 class PromptPayload(BaseModel):
     idea: str
     model: str
 
-# Helper: Send AI request
+# Helper: call the AI API
 def send_ai_request(prompt, model_name, api_key, api_url):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
@@ -29,10 +29,11 @@ def send_ai_request(prompt, model_name, api_key, api_url):
         "max_tokens": 500
     }
     response = requests.post(api_url, headers=headers, json=payload)
+    response.raise_for_status()  # to catch HTTP errors cleanly
     result = response.json()
     return result["choices"][0]["message"]["content"]
 
-# Helper: Build prompt
+# Helper: build the full prompt
 def process_prompt_flow(idea, api_key, model_name, url):
     context_instruction = f"You are a senior AI prompt engineer. Define a strategic context for: '{idea}'"
     objective_instruction = f"You are a senior AI strategist. Define an actionable objective for: '{idea}'"
@@ -41,23 +42,25 @@ def process_prompt_flow(idea, api_key, model_name, url):
     objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
 
     final_magic_prompt = f"""
-        You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
-        {context_result}
-        Your task is to {objective_result}
-        Ensure the content is precise, engaging, outcome-focused, and contextually sound.
-        """
+    You are an expert AI Prompt Engineer. Choose your years of experience based on the task complexity:
+    {context_result}
+    Your task is to {objective_result}
+    Ensure the content is precise, engaging, outcome-focused, and contextually sound.
+    """
 
-    final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
-    return final_output
+    return send_ai_request(final_magic_prompt, model_name, api_key, url)
 
-
-# ✅ POST endpoint with random slug
+# POST endpoint
 @app.post("/generate/{slug}")
 async def generate_magic_prompt(slug: str, payload: PromptPayload):
     openai_api_key = os.getenv("OPENAI_KEY")
     deepseek_api_key = os.getenv("DEEPSEEK_KEY")
 
-    results = {}
+    # Initialize result keys to prevent undefined in frontend
+    results = {
+        "openai": None,
+        "deepseek": None
+    }
 
     if payload.model in ["OpenAI GPT-3.5", "Both"]:
         openai_output = process_prompt_flow(
@@ -78,7 +81,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         "magic_prompt": results
     }
 
-# Optional: root path test
+# Root route test
 @app.get("/")
 def read_root():
     return {"message": "Prompt API is running! 🎉"}
