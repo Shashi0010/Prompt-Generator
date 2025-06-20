@@ -70,10 +70,11 @@ def process_prompt_flow(idea, api_key, model_name, url):
 # POST endpoint with random slug
 @app.post("/generate/{slug}")
 async def generate_magic_prompt(slug: str, payload: PromptPayload):
-    print(f"\nReceived API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
-
     openai_api_key = os.getenv("OPENAI_KEY")
     deepseek_api_key = os.getenv("DEEPSEEK_KEY")
+
+    print(f"🔑 OPENAI_KEY: {openai_api_key}")
+    print(f"🔑 DEEPSEEK_KEY: {deepseek_api_key}")
 
     results = {}
 
@@ -89,7 +90,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         )
         results["deepseek"] = deepseek_output
 
-    print(f"Returning API response: {results}\n")
+    print(f"Returning API response: {results}")
 
     return {
         "slug": slug,
@@ -97,6 +98,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         "model": payload.model,
         "magic_prompt": results
     }
+
 
 # Optional: root path test
 @app.get("/")
