@@ -24,7 +24,6 @@ class PromptPayload(BaseModel):
 def send_ai_request(prompt, model_name, api_key, api_url):
     print(f"\nSending AI request to {api_url} with model {model_name}")
     print(f"Prompt content: {prompt}\n")
-
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": model_name,
@@ -33,9 +32,11 @@ def send_ai_request(prompt, model_name, api_key, api_url):
     }
 
     response = requests.post(api_url, headers=headers, json=payload)
+    
     print(f"API raw response: {response.text}\n")
 
     result = response.json()
+    print(f"API response for {model_name}: {result}")
     return result["choices"][0]["message"]["content"]
 
 # Helper: Build prompt flow with debug logs
@@ -50,7 +51,7 @@ def process_prompt_flow(idea, api_key, model_name, url):
         objective_instruction = f"You are a senior AI strategist. Define an actionable objective for: '{idea}'"
         objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
         print(f"Objective result: {objective_result}")
-
+        print(f"Processing prompt for model: {model_name}, API key present: {bool(api_key)}")
         final_magic_prompt = f"""
         You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
         {context_result}
