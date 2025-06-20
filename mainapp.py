@@ -43,7 +43,7 @@ def generate_prompt_for_idea(idea):
     return f"""
 Act as a world-class expert prompt engineer.
 
-Given the following raw idea: "{idea}"
+Given the following raw idea: \"{idea}\"
 
 Your job is to craft a fully structured, actionable AI prompt that includes:
 
@@ -80,14 +80,15 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
     print(f"🔑 DEEPSEEK_KEY present: {bool(deepseek_api_key)}")
 
     results = {}
+    model = payload.model.lower()
 
-    if payload.model in ["OpenAI GPT-3.5", "Both"]:
+    if model in ["gpt-3.5", "both"]:
         openai_output = process_prompt_flow(
             payload.idea, openai_api_key, "gpt-3.5-turbo", "https://api.openai.com/v1/chat/completions"
         )
         results["openai"] = openai_output
 
-    if payload.model in ["DeepSeek", "Both"]:
+    if model in ["deepseek", "both"]:
         deepseek_output = process_prompt_flow(
             payload.idea, deepseek_api_key, "deepseek-chat", "https://api.deepseek.com/v1/chat/completions"
         )
