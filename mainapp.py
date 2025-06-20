@@ -22,8 +22,8 @@ class PromptPayload(BaseModel):
 
 # Helper: Send AI request with debug logs
 def send_ai_request(prompt, model_name, api_key, api_url):
-    print(f"\nSending AI request to {api_url} with model {model_name}")
-    print(f"Prompt content: {prompt}\n")
+    print(f"\n📡 Sending AI request to {api_url} with model {model_name}")
+    print(f"📝 Prompt content: {prompt}\n")
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": model_name,
@@ -32,39 +32,40 @@ def send_ai_request(prompt, model_name, api_key, api_url):
     }
 
     response = requests.post(api_url, headers=headers, json=payload)
-    
-    print(f"API raw response: {response.text}\n")
+
+    print(f"📩 API raw response: {response.text}\n")
 
     result = response.json()
-    print(f"API response for {model_name}: {result}")
+    print(f"✅ API response JSON for {model_name}: {result}\n")
     return result["choices"][0]["message"]["content"]
 
 # Helper: Build prompt flow with debug logs
 def process_prompt_flow(idea, api_key, model_name, url):
-    print(f"\nProcessing idea: {idea} with {model_name} at {url}")
+    print(f"\n⚙️ Processing idea: {idea} with {model_name} at {url}")
 
     try:
         context_instruction = f"You are a senior AI prompt engineer. Define a strategic context for: '{idea}'"
         context_result = send_ai_request(context_instruction, model_name, api_key, url)
-        print(f"Context result: {context_result}")
+        print(f"📌 Context result: {context_result}")
 
         objective_instruction = f"You are a senior AI strategist. Define an actionable objective for: '{idea}'"
         objective_result = send_ai_request(objective_instruction, model_name, api_key, url)
-        print(f"Objective result: {objective_result}")
-        print(f"Processing prompt for model: {model_name}, API key present: {bool(api_key)}")
+        print(f"📌 Objective result: {objective_result}")
+
         final_magic_prompt = f"""
         You are an expert AI Prompt Engineer. Decide an appropriate number of years of experience for yourself based on the complexity and depth of the following task and mention it naturally in the prompt:
         {context_result}
         Your task is to {objective_result}
         Ensure the content is precise, engaging, outcome-focused, and contextually sound.
         """
+
         final_output = send_ai_request(final_magic_prompt, model_name, api_key, url)
-        print(f"Final magic prompt result: {final_output}\n")
+        print(f"✨ Final magic prompt result: {final_output}\n")
 
         return final_output
 
     except Exception as e:
-        print(f"Error during prompt processing: {e}")
+        print(f"❌ Error during prompt processing: {e}")
         return "Prompt generation failed."
 
 # POST endpoint with random slug
@@ -75,6 +76,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
 
     print(f"🔑 OPENAI_KEY: {openai_api_key}")
     print(f"🔑 DEEPSEEK_KEY: {deepseek_api_key}")
+    print(f"📥 Received API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
 
     results = {}
 
@@ -90,7 +92,7 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         )
         results["deepseek"] = deepseek_output
 
-    print(f"Returning API response: {results}")
+    print(f"📤 Returning API response: {results}\n")
 
     return {
         "slug": slug,
@@ -98,7 +100,6 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
         "model": payload.model,
         "magic_prompt": results
     }
-
 
 # Optional: root path test
 @app.get("/")
