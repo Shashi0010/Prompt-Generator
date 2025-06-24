@@ -6,31 +6,27 @@ import requests
 
 app = FastAPI()
 
-# CORS config to allow frontend on Netlify
+# CORS config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://magic-prompt-generator.netlify.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Pydantic model for expected POST body
 class PromptPayload(BaseModel):
     idea: str
-    model: str
+    models: list
 
-# Helper: Send AI request with debug logs
-def send_ai_request(prompt, api_key, api_url, model_name=None):
-    print(f"\nSending AI request to {api_url}")
-    print(f"Prompt content: {prompt}\n")
-
+# Helper to send prompt to API
+def send_ai_request(prompt, model_name, api_key, api_url, is_huggingface=False):
+    print(f"\n➡️ Sending AI request to {api_url} with model {model_name}")
     headers = {"Authorization": f"Bearer {api_key}"}
 
-    if "huggingface" in api_url:
-        headers["Content-Type"] = "application/json"
+    if is_huggingface:
         payload = {"inputs": prompt}
-    else:  # Groq API (OpenAI-compatible)
+    else:
         headers["Content-Type"] = "application/json"
         payload = {
             "model": model_name,
@@ -39,81 +35,69 @@ def send_ai_request(prompt, api_key, api_url, model_name=None):
         }
 
     response = requests.post(api_url, headers=headers, json=payload)
-    print(f"API raw response: {response.text}\n")
+    print(f"Raw response: {response.text}")
 
-    result = response.json()
-
-    if "huggingface" in api_url:
-        return result[0]["generated_text"] if isinstance(result, list) else result
-    else:
-        return result["choices"][0]["message"]["content"]
-
-# Helper: Build full structured magic prompt
-def generate_prompt_for_idea(idea):
-    return f"""
-Act as a world-class expert prompt engineer.
-
-Given the following raw idea: \"{idea}\"
-
-Your job is to craft a fully structured, actionable AI prompt that includes:
-
-- A professional role for the AI to assume.
-- Clear context setting.
-- Step-by-step approach or strategy.
-- Specific instructions and constraints.
-- Preferred tone and format.
-- Word count or length guidelines if relevant.
-
-Ensure the prompt is clear, detailed, and actionable.
-Only return the final AI prompt — no commentary or extra text.
-"""
-
-# Process flow
-def process_prompt_flow(idea, api_key, api_url, model_name=None):
     try:
-        base_prompt = generate_prompt_for_idea(idea)
-        final_output = send_ai_request(base_prompt, api_key, api_url, model_name)
-        print(f"Final generated prompt: {final_output}\n")
-        return final_output
+        result = response.json()
+        if is_huggingface:
+            return result[0]['generated_text']
+        return result["choices"][0]["message"]["content"]
     except Exception as e:
-        print(f"Error during prompt processing: {e}")
+        print(f"❌ Error: {e}")
         return "Prompt generation failed."
 
-# POST endpoint with random slug
+# Build final structured prompt
+def generate_prompt_for_idea(idea):
+    return f"""
+Act as a world-class AI prompt engineer.
+
+Given the idea: "{idea}"
+
+Craft a fully structured prompt including:
+- Role for AI
+- Context setting
+- Approach
+- Specific instructions
+- Tone & format
+- Word limit if needed
+
+Return only the final prompt text.
+"""
+
+# Prompt generation logic
+def process_prompt_flow(idea, api_key, model_name, url, is_huggingface=False):
+    try:
+        final_prompt = generate_prompt_for_idea(idea)
+        return send_ai_request(final_prompt, model_name, api_key, url, is_huggingface)
+    except Exception as e:
+        print(f"❌ Error during prompt processing: {e}")
+        return "Prompt generation failed."
+
 @app.post("/generate/{slug}")
 async def generate_magic_prompt(slug: str, payload: PromptPayload):
-    huggingface_api_key = os.getenv("HUGGINGFACE_KEY")
-    groq_api_key = os.getenv("GROQ_KEY")
-
-    print(f"\n📥 Received API request with slug: {slug}, idea: {payload.idea}, model: {payload.model}")
-
     results = {}
-    model = payload.model.lower()
+    print(f"\n📥 API request: slug={slug}, idea={payload.idea}, models={payload.models}")
 
-    if model == "huggingface":
-        output = process_prompt_flow(
-            payload.idea, huggingface_api_key,
-            "https://api-inference.huggingface.co/models/gpt2"
-        )
-        results["huggingface"] = output
+    for model in payload.models:
+        if model == "gpt-3.5":
+            output = process_prompt_flow(payload.idea, os.getenv("OPENAI_KEY"), "gpt-3.5-turbo", "https://api.openai.com/v1/chat/completions")
+            results[model] = output
 
-    if model == "groq":
-        output = process_prompt_flow(
-            payload.idea, groq_api_key,
-            "https://api.groq.com/openai/v1/chat/completions", "llama3-8b-8192"
-        )
-        results["groq"] = output
+        elif model == "openrouter-free":
+            output = process_prompt_flow(payload.idea, os.getenv("OPENROUTER_KEY"), "openrouter/gpt-3.5-turbo", "https://openrouter.ai/api/v1/chat/completions")
+            results[model] = output
+
+        elif model == "google-gemini-free":
+            output = process_prompt_flow(payload.idea, os.getenv("GEMINI_KEY"), "google/gemini-pro", "https://openrouter.ai/api/v1/chat/completions")
+            results[model] = output
+
+        elif model == "mistral-7b-open":
+            output = process_prompt_flow(payload.idea, os.getenv("HUGGINGFACE_KEY"), "mistralai/Mistral-7B-v0.1", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-v0.1", True)
+            results[model] = output
 
     print(f"📤 Returning API response: {results}\n")
+    return {"slug": slug, "idea": payload.idea, "models": payload.models, "magic_prompt": results}
 
-    return {
-        "slug": slug,
-        "idea": payload.idea,
-        "model": payload.model,
-        "magic_prompt": results
-    }
-
-# Root endpoint
 @app.get("/")
 def read_root():
-    return {"message": "Prompt API is running! 🎉"}
+    return {"message": "Prompt API is running 🚀"}
