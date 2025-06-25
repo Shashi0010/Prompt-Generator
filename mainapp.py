@@ -6,7 +6,6 @@ import requests
 
 app = FastAPI()
 
-# CORS config
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,11 +18,9 @@ class PromptPayload(BaseModel):
     idea: str
     models: list
 
-# Helper to send prompt to API
 def send_ai_request(prompt, model_name, api_key, api_url, is_huggingface=False):
     print(f"\n➡️ Sending AI request to {api_url} with model {model_name}")
     headers = {"Authorization": f"Bearer {api_key}"}
-
     if is_huggingface:
         payload = {"inputs": prompt}
     else:
@@ -46,7 +43,6 @@ def send_ai_request(prompt, model_name, api_key, api_url, is_huggingface=False):
         print(f"❌ Error: {e}")
         return "Prompt generation failed."
 
-# Build final structured prompt
 def generate_prompt_for_idea(idea):
     return f"""
 Act as a world-class AI prompt engineer.
@@ -64,7 +60,6 @@ Craft a fully structured prompt including:
 Return only the final prompt text.
 """
 
-# Prompt generation logic
 def process_prompt_flow(idea, api_key, model_name, url, is_huggingface=False):
     try:
         final_prompt = generate_prompt_for_idea(idea)
@@ -84,11 +79,11 @@ async def generate_magic_prompt(slug: str, payload: PromptPayload):
             results[model] = output
 
         elif model == "openrouter-free":
-            output = process_prompt_flow(payload.idea, os.getenv("OPENROUTER_KEY"), "openrouter/gpt-3.5-turbo", "https://openrouter.ai/api/v1/chat/completions")
+            output = process_prompt_flow(payload.idea, os.getenv("OPENROUTER_KEY"), "gpt-3.5-turbo", "https://openrouter.ai/api/v1/chat/completions")
             results[model] = output
 
         elif model == "google-gemini-free":
-            output = process_prompt_flow(payload.idea, os.getenv("GEMINI_KEY"), "google/gemini-pro", "https://openrouter.ai/api/v1/chat/completions")
+            output = process_prompt_flow(payload.idea, os.getenv("OPENROUTER_KEY"), "google/gemini-pro", "https://openrouter.ai/api/v1/chat/completions")
             results[model] = output
 
         elif model == "mistral-7b-open":
